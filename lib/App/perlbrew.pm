@@ -1,7 +1,7 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.03";
+our $VERSION = "0.04";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
@@ -21,6 +21,9 @@ perlbrew - $VERSION
 
 Usage:
 
+    # Read more help
+    perlbrew -h
+
     perlbrew init
 
     perlbrew install perl-5.11.5
@@ -37,7 +40,7 @@ HELP
 
 sub run_command_init {
     require File::Path;
-    File::Path::make_path(
+    File::Path::mkpath(
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
@@ -61,7 +64,7 @@ Perlbrew environment initiated, required directories are created under
 
     $ROOT
 
-Well-done! Congradulations! Please add the following line to the end
+Well-done! Congratulations! Please add the following line to the end
 of your ~/.${yourshrc}
 
     source $ROOT/etc/${shrc}
@@ -103,7 +106,7 @@ sub run_command_install {
             exit;
         }
 
-        File::Path::make_path("$ROOT/bin");
+        File::Path::mkpath("$ROOT/bin");
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 
@@ -172,7 +175,14 @@ HELP
         my $as = $self->{as} || $dist;
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $dist_version =~ /5\.11/;
-        print "Installing $dist...";
+        print "Installing $dist into $ROOT/perls/$as\n";
+        print <<INSTALL if $self->{quiet} && !$self->{verbose};
+This would take a while. You can run the following command on another shell to track the status:
+
+  tail -f $self->{log_file}
+
+INSTALL
+
         my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
 
         my $cmd = join ";",
@@ -191,7 +201,18 @@ HELP
           );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
           if ( $self->{quiet} && !$self->{verbose} );
-        system($cmd);
+        print !system($cmd) ? <<SUCCESS : <<FAIL;
+Installed $dist as $as successfully. Run the following command to switch to it.
+
+  perlbrew switch $as
+
+SUCCESS
+Installing $dist failed. See $self->{log_file} to see why.
+If you want to force install the distribution, try:
+
+  perlbrew --force install $dist_name
+
+FAIL
     }
 }
 
@@ -279,9 +300,9 @@ App::perlbrew - Manage perl installations in your $HOME
 =head1 DESCRIPTION
 
 perlbrew is a program to automate the building and installation of
-perl in the users HOME. At the moment, it installs everthing to
-C<~/perl5/perlbrew>, and requies you to tweak your PATH by including a
-bashrc/cshrc file it provides. You then can be benifit from not having
+perl in the users HOME. At the moment, it installs everything to
+C<~/perl5/perlbrew>, and requires you to tweak your PATH by including a
+bashrc/cshrc file it provides. You then can benefit from not having
 to run 'sudo' commands to install cpan modules because those are
 installed inside your HOME too. It's almost like an isolated perl
 environments.
@@ -299,7 +320,7 @@ After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
 and you should follow the instruction on screen to setup your
 C<.bashrc> or C<.cshrc> to put it in your PATH.
 
-The downloaded perlbrew is a self-contianed standalone program that
+The downloaded perlbrew is a self-contained standalone program that
 embed all non-core modules it uses. It should be runnable with perl
 5.8 or high versions of perls.
 
@@ -307,7 +328,7 @@ You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
 
     cpan App::perlbrew
 
-This installs 'perlbrew' into your current PATH and it is alwasy
+This installs 'perlbrew' into your current PATH and it is always
 executed with your current perl.
 
 =head1 USAGE
@@ -353,19 +374,23 @@ The standalone executable contains the following modules embedded.
 
 =over 4
 
-=item L<HTTP::Lite> Copyright 2000-2002 Roy Hopper, 2009 Adam Kennedy
+=item L<HTTP::Lite>
+
+Copyright (c) 2000-2002 Roy Hopper, 2009 Adam Kennedy.
+
+Licensed under the same term as Perl itself.
 
 =back
 
 =head1 LICENCE
 
-Same as Perl
+The MIT License
 
-=head2 CONTRIBUTORS
+=head1 CONTRIBUTORS
 
 Patches and code improvements were contributed by:
 
-Tatsuhiko Miyagawa, Chris Prather
+Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero
 
 =head1 DISCLAIMER OF WARRANTY
 
@@ -389,3 +414,5 @@ RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
 FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
 SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGES.
+
+=cut

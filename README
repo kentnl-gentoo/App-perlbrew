@@ -16,21 +16,26 @@ SYNOPSIS
         perlbrew switch perl-5.11.5
         perl -v
 
+        # Switch to another version
         perlbrew switch perl-5.8.1
         perl -v
 
         # Switch to a certain perl executable not managed by perlbrew.
-        # Useful when you messed up too deep.
         perlbrew switch /usr/bin/perl
+
+        # Or turn it off completely. Useful when you messed up too deep.
+        perlbrew off
+
+        # Use 'switch' command to turn it back on.
+        perlbrew switch perl-5.11.5
 
 DESCRIPTION
     perlbrew is a program to automate the building and installation of perl
-    in the users HOME. At the moment, it installs everthing to
-    "~/perl5/perlbrew", and requies you to tweak your PATH by including a
-    bashrc/cshrc file it provides. You then can be benifit from not having
-    to run 'sudo' commands to install cpan modules because those are
-    installed inside your HOME too. It's almost like an isolated perl
-    environments.
+    in the users HOME. At the moment, it installs everything to
+    "~/perl5/perlbrew", and requires you to tweak your PATH by including a
+    bashrc/cshrc file it provides. You then can benefit from not having to
+    run 'sudo' commands to install cpan modules because those are installed
+    inside your HOME too. It's almost like an isolated perl environments.
 
 INSTALLATION
     The recommended way to install perlbrew is to run these statements in
@@ -44,7 +49,7 @@ INSTALLATION
     you should follow the instruction on screen to setup your ".bashrc" or
     ".cshrc" to put it in your PATH.
 
-    The downloaded perlbrew is a self-contianed standalone program that
+    The downloaded perlbrew is a self-contained standalone program that
     embed all non-core modules it uses. It should be runnable with perl 5.8
     or high versions of perls.
 
@@ -52,7 +57,7 @@ INSTALLATION
 
         cpan App::perlbrew
 
-    This installs 'perlbrew' into your current PATH and it is alwasy
+    This installs 'perlbrew' into your current PATH and it is always
     executed with your current perl.
 
 USAGE
@@ -93,15 +98,18 @@ COPYRIGHT
 
     The standalone executable contains the following modules embedded.
 
-    HTTP::Lite Copyright 2000-2002 Roy Hopper, 2009 Adam Kennedy
+    HTTP::Lite
+        Copyright (c) 2000-2002 Roy Hopper, 2009 Adam Kennedy.
+
+        Licensed under the same term as Perl itself.
 
 LICENCE
-    Same as Perl
+    The MIT License
 
-  CONTRIBUTORS
+CONTRIBUTORS
     Patches and code improvements were contributed by:
 
-    Tatsuhiko Miyagawa, Chris Prather
+    Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero
 
 DISCLAIMER OF WARRANTY
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY

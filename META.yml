@@ -23,4 +23,5 @@ requires:
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.03
+  repository: git://github.com/gugod/App-perlbrew.git
+version: 0.04
