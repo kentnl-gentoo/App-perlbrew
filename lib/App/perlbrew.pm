@@ -1,7 +1,7 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.05";
+our $VERSION = "0.06";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
@@ -207,7 +207,7 @@ HELP
         my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
 
         my @d_options = @{ $self->{D} };
-        my $as = $self->{as} || $dist_git_describe ? "perl-$dist_git_describe" : $dist;
+        my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $usedevel;
         print "Installing $dist into $ROOT/perls/$as\n";
@@ -440,7 +440,7 @@ The MIT License
 
 Patches and code improvements were contributed by:
 
-Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May
+Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May, Jesse Luehrs
 
 =head1 DISCLAIMER OF WARRANTY
 
