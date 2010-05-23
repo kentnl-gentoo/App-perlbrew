@@ -1,7 +1,7 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.06";
+our $VERSION = "0.07";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
@@ -11,7 +11,7 @@ sub run_command {
     $opt->{log_file} = "$ROOT/build.log";
     my $self = bless $opt, __PACKAGE__;
     $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?";
+    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?";
     $self->$s(@args);
 }
 
@@ -26,11 +26,11 @@ Usage:
 
     perlbrew init
 
-    perlbrew install perl-5.12.0
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.13.0
     perlbrew installed
 
-    perlbrew switch perl-5.12.0
+    perlbrew switch perl-5.12.1
     perlbrew switch /usr/bin/perl
 
     perlbrew off
@@ -72,14 +72,14 @@ of your ~/.${yourshrc}
 After that, exit this shell, start a new one, and install some fresh
 perls:
 
-    perlbrew install perl-5.12.0-RC0
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.10.1
 
 For further instructions, simply run:
 
     perlbrew
 
-The default help messages will popup an tell you what to do!
+The default help messages will popup and tell you what to do!
 
 Enjoy perlbrew at \$HOME!!
 INSTRUCTION
@@ -117,7 +117,7 @@ The perlbrew is installed as:
 
 You may trash the downloaded $executable from now on.
 
-Next, if this is the first time you run perlbrew installation, run:
+Next, if this is the first time you've run perlbrew installation, run:
 
     $target init
 
@@ -172,6 +172,7 @@ HELP
                     }
                     $loc or last;
                     $status = $ua->request($loc) or die "Fail to get $loc";
+                    die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
                 }
                 if ($cb) {
                     return $cb->($ua->body);
@@ -212,7 +213,7 @@ HELP
         push @d_options, "usedevel" if $usedevel;
         print "Installing $dist into $ROOT/perls/$as\n";
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
-This would take a while. You can run the following command on another shell to track the status:
+This could take a while. You can run the following command on another shell to track the status:
 
   tail -f $self->{log_file}
 
@@ -251,6 +252,8 @@ INSTALL
 
         print $cmd, "\n";
 
+        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);    
+
         print !system($cmd) ? <<SUCCESS : <<FAIL;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
@@ -284,6 +287,17 @@ sub run_command_installed {
 
 sub run_command_switch {
     my ( $self, $dist ) = @_;
+
+    unless ( $dist ) {
+        # If no args were given to switch, show the current perl.
+        my $current = readlink ( -d "$ROOT/perls/current"
+                                 ? "$ROOT/perls/current"
+                                 : "$ROOT/bin/perl" );
+        printf "Currently switched %s\n",
+            ( $current ? "to $current" : 'off' );
+        return;
+    }
+
     if (-x $dist) {
         unlink "$ROOT/perls/current";
         system "ln -fs $dist $ROOT/bin/perl";
@@ -324,6 +338,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew init
 
     # Install some Perls
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.8.1
     perlbrew install perl-5.11.5
 
@@ -331,7 +346,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew installed
 
     # Switch perl in the $PATH
-    perlbrew switch perl-5.11.5
+    perlbrew switch perl-5.12.1
     perl -v
 
     # Switch to another version
@@ -345,7 +360,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew off
 
     # Use 'switch' command to turn it back on.
-    perlbrew switch perl-5.11.5
+    perlbrew switch perl-5.12.1
 
 =head1 DESCRIPTION
 
@@ -370,6 +385,15 @@ After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
 and you should follow the instruction on screen to setup your
 C<.bashrc> or C<.cshrc> to put it in your PATH.
 
+The directory C<~/perl5/perlbrew> will contain all install perl
+executables, libraries, documentations, lib, site_libs. If you need to
+install C<perlbrew>, and the perls it brews, into somewhere else
+because, say, your HOME has limited quota, you can do that by setting
+a C<PERLBREW_ROOT> environment variable before you run C<./perlbrew install>.
+
+    export PERLBREW_ROOT=/mnt/perlbrew
+    ./perlbrew install
+
 The downloaded perlbrew is a self-contained standalone program that
 embed all non-core modules it uses. It should be runnable with perl
 5.8 or high versions of perls.
@@ -380,6 +404,22 @@ You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
 
 This installs 'perlbrew' into your current PATH and it is always
 executed with your current perl.
+
+NOTICE. When you install or upgrade perlbrew with cpan / cpanp /
+cpanm, make sure you are not using one of the perls brewed with
+perlbrew. If so, the `perlbrew` executable you just installed will not
+be available after you swith to other perls. You might not be able to
+invoke further C<perlbrew> commands after so because the executable
+C<perlbrew> is not in your C<PATH> anymore. Installing it again with cpan
+can temporarily solved this problem.
+
+It should be relatively safe to install C<App::perlbrew> with system
+cpan (like C</usr/bin/cpan>) because then it will be installed under a
+system PATH like C</usr/bin>, which is not effected by C<perlbrew switch>
+command.
+
+Again, it is recommended to let C<perlbrew> install itself. It's
+easier, and it works better.
 
 =head1 USAGE
 
@@ -440,7 +480,9 @@ The MIT License
 
 Patches and code improvements were contributed by:
 
-Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May, Jesse Luehrs
+Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
+Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura
+
 
 =head1 DISCLAIMER OF WARRANTY
 
