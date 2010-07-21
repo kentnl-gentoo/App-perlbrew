@@ -1,10 +1,18 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.07";
+use File::Spec::Functions qw( catfile );
 
-my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+our $VERSION = "0.08";
+our $CONF;
+
+my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = "$ROOT/perls/current";
+
+sub get_current_perl {
+    return $CURRENT_PERL;
+}
 
 sub run_command {
     my ( undef, $opt, $x, @args ) = @_;
@@ -155,32 +163,9 @@ HELP
         my ($dist_path, $dist_tarball, $dist_commit);
 
         unless ($dist_git_describe) {
-            require HTTP::Lite;
-
-            my $http_get = sub {
-                my ($url, $cb) = @_;
-                my $ua = HTTP::Lite->new;
-
-                my $loc = $url;
-                my $status = $ua->request($loc) or die "Fail to get $loc";
-
-                my $redir_count = 0;
-                while ($status == 302 || $status == 301) {
-                    last if $redir_count++ > 5;
-                    for ($ua->headers_array) {
-                        /Location: (\S+)/ and $loc = $1, last;
-                    }
-                    $loc or last;
-                    $status = $ua->request($loc) or die "Fail to get $loc";
-                    die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
-                }
-                if ($cb) {
-                    return $cb->($ua->body);
-                }
-                return $ua->body;
-            };
-
-            my $html = $http_get->("http://search.cpan.org/dist/$dist");
+            my $mirror = $self->conf->{mirror};
+            my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+            my $html = $self->_http_get("http://search.cpan.org/dist/$dist", undef, $header);
 
             ($dist_path, $dist_tarball) =
                 $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
@@ -192,14 +177,15 @@ HELP
             else {
                 print "Fetching $dist as $dist_tarball_path\n";
 
-                $http_get->(
+                $self->_http_get(
                     "http://search.cpan.org${dist_path}",
                     sub {
                         my ($body) = @_;
                         open my $BALL, "> $dist_tarball_path";
                         print $BALL $body;
                         close $BALL;
-                    }
+                    },
+                    $header
                 );
             }
 
@@ -239,6 +225,10 @@ INSTALL
             "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
             "sh Configure $configure_flags " . join( ' ', map { "-D$_" } @d_options ),
+            $dist_version =~ /^5\.(\d+)\.(\d+)/
+                && ($1 < 8 || $1 == 8 && $2 < 9)
+                    ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
+                    : (),
             "make",
             (
                 $self->{force}
@@ -252,7 +242,7 @@ INSTALL
 
         print $cmd, "\n";
 
-        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);    
+        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
         print !system($cmd) ? <<SUCCESS : <<FAIL;
 Installed $dist as $as successfully. Run the following command to switch to it.
@@ -269,19 +259,37 @@ FAIL
     }
 }
 
-sub run_command_installed {
+sub calc_installed {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
+
+    my @result;
 
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        print $name, ( $name eq $current ? '(*)' : '' ), "\n";
+        push @result, { name => $name, is_current => ($name eq $current ? 1 : 0)  };
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl");
     for ( grep { -x $_ && !-l $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
-        print $_, ($current_perl_executable eq $_ ? "(*)" : ""), "\n";
+        push @result, {
+            name       => $_,
+            is_current => ($_ eq $current_perl_executable ? 1 : 0),
+        };
+    }
+
+    return @result;
+}
+
+sub run_command_installed {
+    my $self = shift;
+    my @installed = $self->calc_installed(@_);
+
+    for my $installed (@installed) {
+        my $name = $installed->{name};
+        my $cur  = $installed->{is_current};
+        print $name, ($cur ? '(*)' : ''), "\n";
     }
 }
 
@@ -324,6 +332,119 @@ sub run_command_off {
     }
 }
 
+sub run_command_mirror {
+    my($self) = @_;
+    print "Fetching mirror list\n";
+    my $raw = $self->_http_get("http://search.cpan.org/mirror");
+    my $found;
+    my @mirrors;
+    foreach my $line ( split m{\n}, $raw ) {
+        $found = 1 if $line =~ m{<select name="mirror">};
+        next if ! $found;
+        last if $line =~ m{</select>};
+        if ( $line =~ m{<option value="(.+?)">(.+?)</option>} ) {
+            my $url  = $1;
+            (my $name = $2) =~ s/&#(\d+);/chr $1/seg;
+            push @mirrors, { url => $url, name => $name };
+        }
+    }
+
+    my $select;
+    require ExtUtils::MakeMaker;
+    MIRROR: foreach my $id ( 0..$#mirrors ) {
+        my $mirror = $mirrors[$id];
+        printf "[% 3d] %s\n", $id + 1, $mirror->{name};
+        if ( $id > 0 ) {
+            my $test = $id / 19;
+            if ( $test == int $test ) {
+                my $remaining = $#mirrors - $id;
+                my $ask = "Select a mirror by number or press enter to see the rest "
+                        . "($remaining more) [q to quit]";
+                my $val = ExtUtils::MakeMaker::prompt( $ask );
+                next MIRROR if ! $val;
+                last MIRROR if $val eq 'q';
+                $select = $val + 0;
+                if ( ! $select || $select - 1 > $#mirrors ) {
+                    die "Bogus mirror ID: $select";
+                }
+                $select = $mirrors[$select];
+                die "Mirror ID is invalid" if ! $select;
+                last MIRROR;
+            }
+        }
+    }
+    die "You didn't select a mirror!\n" if ! $select;
+    print "Selected $select->{name} ($select->{url}) as the mirror\n";
+    my $conf = $self->conf;
+    $conf->{mirror} = $select;
+    $self->_save_conf;
+    return;
+}
+
+sub _http_get {
+    my ($self, $url, $cb, $header) = @_;
+    require HTTP::Lite;
+    my $ua = HTTP::Lite->new;
+
+    if ( $header && ref $header eq 'HASH') {
+        foreach my $name ( keys %{ $header} ) {
+            $ua->add_req_header( $name, $header->{ $name } );
+        }
+    }
+
+    my $loc = $url;
+    my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
+
+    my $redir_count = 0;
+    while ($status == 302 || $status == 301) {
+        last if $redir_count++ > 5;
+        for ($ua->headers_array) {
+            /Location: (\S+)/ and $loc = $1, last;
+        }
+        last if ! $loc;
+        $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
+        die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
+    }
+    return $cb ? $cb->($ua->body) : $ua->body;
+}
+
+sub conf {
+    my($self) = @_;
+    $self->_get_conf if ! $CONF;
+    return $CONF;
+}
+
+sub _save_conf {
+    my($self) = @_;
+    require Data::Dumper;
+    open my $FH, '>', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!";
+    my $d = Data::Dumper->new([$CONF],['App::perlbrew::CONF']);
+    print $FH $d->Dump;
+    close $FH;
+}
+
+sub _get_conf {
+    my($self) = @_;
+    print "Attempting to load conf from $CONF_FILE\n";
+    if ( ! -e $CONF_FILE ) {
+        local $CONF = {} if ! $CONF;
+        $self->_save_conf;
+    }
+
+    open my $FH, '<', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!";
+    my $raw = do { local $/; my $rv = <$FH>; $rv };
+    close $FH;
+
+    my $rv = eval $raw;
+    if ( $@ ) {
+        warn "Error loading conf: $@";
+        $CONF = {};
+        return;
+    }
+    $CONF = {} if ! $CONF;
+    return;
+}
+
 1;
 
 __END__
@@ -336,6 +457,9 @@ App::perlbrew - Manage perl installations in your $HOME
 
     # Initialize
     perlbrew init
+
+    # pick a prefered CPAN mirror
+    perlbrew mirror
 
     # Install some Perls
     perlbrew install perl-5.12.1
@@ -369,8 +493,8 @@ perl in the users HOME. At the moment, it installs everything to
 C<~/perl5/perlbrew>, and requires you to tweak your PATH by including a
 bashrc/cshrc file it provides. You then can benefit from not having
 to run 'sudo' commands to install cpan modules because those are
-installed inside your HOME too. It's almost like an isolated perl
-environments.
+installed inside your HOME too. It's a completely separate perl
+environment.
 
 =head1 INSTALLATION
 
@@ -396,7 +520,7 @@ a C<PERLBREW_ROOT> environment variable before you run C<./perlbrew install>.
 
 The downloaded perlbrew is a self-contained standalone program that
 embed all non-core modules it uses. It should be runnable with perl
-5.8 or high versions of perls.
+5.8 or later versions of perl.
 
 You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
 
@@ -410,8 +534,10 @@ cpanm, make sure you are not using one of the perls brewed with
 perlbrew. If so, the `perlbrew` executable you just installed will not
 be available after you swith to other perls. You might not be able to
 invoke further C<perlbrew> commands after so because the executable
-C<perlbrew> is not in your C<PATH> anymore. Installing it again with cpan
-can temporarily solved this problem.
+C<perlbrew> is not in your C<PATH> anymore. Installing it again with
+cpan can temporarily solve this problem. To ensure you are not using
+a perlbrewed perl, run C<perlbrew off> before upgrading.
+
 
 It should be relatively safe to install C<App::perlbrew> with system
 cpan (like C</usr/bin/cpan>) because then it will be installed under a
@@ -435,7 +561,7 @@ Alternatively, this should also do:
 
     perldoc perlbrew
 
-If you messed up to much or get confused by having to many perls
+If you messed up too much or get confused by having to many perls
 installed, you can do:
 
     perlbrew switch /usr/bin/perl
