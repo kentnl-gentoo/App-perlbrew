@@ -1,54 +1,111 @@
 package App::perlbrew;
 use strict;
+use warnings;
 use 5.8.0;
+use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.09";
+our $VERSION = "0.10";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = "$ROOT/perls/current";
 
+my @GETOPT_CONFIG = (
+    'pass_through',
+    'no_ignore_case',
+    'bundling',
+);
+my @GETOPT_SPEC = (
+    'force|f!',
+    'notest|n!',
+    'quiet|q!',
+    'verbose|v',
+    'as=s',
+
+    'help|?',
+    'version',
+
+    # options passed directly to Configure
+    'D=s@',
+    'U=s@',
+    'A=s@',
+);
+
+
+sub new {
+    my($class, @argv) = @_;
+
+    my %opt = (
+        force => 0,
+        quiet => 1,
+
+        D => [],
+        U => [],
+        A => [],
+    );
+
+    Getopt::Long::Configure(@GETOPT_CONFIG);
+    Getopt::Long::GetOptionsFromArray(\@argv, \%opt, @GETOPT_SPEC)
+        or run_command_help(1);
+
+    # fix up the effect of 'bundling'
+    foreach my $flags (@opt{qw(D U A)}) {
+        foreach my $value(@{$flags}) {
+            $value =~ s/^=//;
+        }
+    }
+
+    $opt{args} = \@argv;
+    return bless \%opt, $class;
+}
+
+sub run {
+    my($self) = @_;
+    $self->run_command($self->get_args);
+}
+
 sub get_current_perl {
     return $CURRENT_PERL;
 }
 
+sub get_args {
+    my ( $self ) = @_;
+    return @{ $self->{args} };
+}
+
 sub run_command {
-    my ( undef, $opt, $x, @args ) = @_;
-    $opt->{log_file} = "$ROOT/build.log";
-    my $self = bless $opt, __PACKAGE__;
-    $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?";
+    my ( $self, $x, @args ) = @_;
+    $self->{log_file} ||= "$ROOT/build.log";
+    if($self->{version}) {
+        $x = 'version';
+    }
+    elsif(!$x || $self->{help}) {
+        $x = 'help';
+    }
+    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?\n";
     $self->$s(@args);
 }
 
+sub run_command_version {
+    my ( $self ) = @_;
+    my $package = ref $self;
+    my $version = $self->VERSION;
+    print <<"VERSION";
+$0  - $package/$version
+VERSION
+}
+
 sub run_command_help {
-    print <<HELP;
-perlbrew - $VERSION
-
-Usage:
-
-    # Read more help
-    perlbrew -h
-
-    perlbrew init
-
-    perlbrew install perl-5.12.1
-    perlbrew install perl-5.13.3
-    perlbrew installed
-
-    perlbrew switch perl-5.12.1
-    perlbrew switch /usr/bin/perl
-
-    perlbrew off
-
-HELP
+    my ( $self, $status ) = @_;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(defined $status ? $status : 1);
 }
 
 sub run_command_init {
-    require File::Path;
-    File::Path::mkpath($_) for (
+    require File::Path::Tiny;
+    File::Path::Tiny::mk($_) for (
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
@@ -99,7 +156,7 @@ sub run_command_install {
 
     unless ($dist) {
         require File::Spec;
-        require File::Path;
+        require File::Path::Tiny;
         require File::Copy;
 
         my $executable = $0;
@@ -114,7 +171,7 @@ sub run_command_install {
             exit;
         }
 
-        File::Path::mkpath("$ROOT/bin");
+        File::Path::Tiny::mk("$ROOT/bin");
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 
@@ -131,6 +188,7 @@ Next, if this is the first time you've run perlbrew installation, run:
 
 And follow the instruction on screen.
 HELP
+        # ' <- for poor editors
         return;
     }
 
@@ -218,23 +276,24 @@ INSTALL
             $configure_flags = '-de';
         }
 
+        my @install = $self->{notest} ? "make install" : ("make test", "make install");
+        @install    = join " && ", @install unless($self->{force});
+
         my $cmd = join ";",
         (
             $extract_command,
             "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
-            "sh Configure $configure_flags "
-            . join(' ', map { "-D$_" } @d_options, map { "-U$_" } @u_options),
+            "sh Configure $configure_flags " .
+                join( ' ',
+                    ( map { "-D$_" } @d_options ),
+                    ( map { "-U$_" } @u_options ),
+                ),
             $dist_version =~ /^5\.(\d+)\.(\d+)/
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                     : (),
-            "make",
-            (
-                $self->{force}
-                ? ( 'make test', 'make install' )
-                : "make test && make install"
-            )
+            "make", @install
         );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
             if ( $self->{quiet} && !$self->{verbose} );
@@ -272,7 +331,7 @@ sub calc_installed {
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl");
-    for ( grep { -x $_ && !-l $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+    for ( grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
         push @result, {
             name       => $_,
             is_current => ($_ eq $current_perl_executable ? 1 : 0),
@@ -363,11 +422,11 @@ sub run_command_mirror {
                 my $val = ExtUtils::MakeMaker::prompt( $ask );
                 next MIRROR if ! $val;
                 last MIRROR if $val eq 'q';
-                $select = $val + 0;
+                $select = $val;
                 if ( ! $select || $select - 1 > $#mirrors ) {
                     die "Bogus mirror ID: $select";
                 }
-                $select = $mirrors[$select];
+                $select = $mirrors[$select - 1];
                 die "Mirror ID is invalid" if ! $select;
                 last MIRROR;
             }
@@ -610,7 +669,7 @@ Patches and code improvements has been contributed by:
 
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
-castaway, jrockway, and chromatic.
+castaway, jrockway, chromatic, Goro Fuji, Sawyer X, and Danijel Tasov.
 
 =head1 DISCLAIMER OF WARRANTY
 
