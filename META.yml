@@ -4,6 +4,7 @@ author:
   - 'Kang-min Liu  C<< <gugod@gugod.org> >>'
 build_requires:
   ExtUtils::MakeMaker: 6.42
+  Test::Simple: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
@@ -25,4 +26,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.10
+version: 0.11
