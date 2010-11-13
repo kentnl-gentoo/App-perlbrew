@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.12";
+our $VERSION = "0.13";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -389,7 +389,11 @@ INSTALL
                 $self->run_command_symlink_executables($as);
             }
 
-            $self->run_command_install_cpanm($as);
+            eval {
+                $self->run_command_install_cpanm($as)
+                    unless -e "$ROOT/bin/cpanm";
+                1;
+            } or warn "WARNING: cpanm installation failed: $@";
 
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
@@ -584,42 +588,44 @@ sub run_command_symlink_executables {
 
 sub run_command_install_cpanm {
     my ($self, $perl) = @_;
-    my $body = $self->_http_get('http://github.com/miyagawa/cpanminus/raw/master/cpanm');
+    my $body = $self->_http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
 
-    open my $CPANM, "> $ROOT/bin/cpanm";
+    open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
     print $CPANM $body;
     close $CPANM;
     chmod 0755, "$ROOT/bin/cpanm";
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
-sub _http_get {
-    my ($self, $url, $cb, $header) = @_;
-    require HTTP::Lite;
-    my $ua = HTTP::Lite->new;
+{
+    my @command;
+    sub _http_get {
+        my ($self, $url, $cb, $header) = @_;
 
-    if ( $header && ref $header eq 'HASH') {
-        foreach my $name ( keys %{ $header} ) {
-            $ua->add_req_header( $name, $header->{ $name } );
+        if (! @command) {
+            my @commands = (
+                [qw( curl --silent --location )],
+                [qw( wget --no-check-certificate --quiet -O - )],
+            );
+            for my $command (@commands) {
+                my $program = $command->[0];
+                if (! system("$program --version >/dev/null 2>&1")) {
+                    @command = @$command;
+                    last;
+                }
+            }
+            die "You have to install either curl or wget\n"
+                unless @command;
         }
+
+        open my $fh, '-|', @command, $url
+            or die "open() for '@command $url': $!";
+        local $/;
+        my $body = <$fh>;
+        close $fh;
+
+        return $cb ? $cb->($body) : $body;
     }
-
-    $ua->proxy($ENV{http_proxy}) if $ENV{http_proxy};
-
-    my $loc = $url;
-    my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
-
-    my $redir_count = 0;
-    while ($status == 302 || $status == 301) {
-        last if $redir_count++ > 5;
-        for ($ua->headers_array) {
-            /Location: (\S+)/ and $loc = $1, last;
-        }
-        last if ! $loc;
-        $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
-        die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
-    }
-    return $cb ? $cb->($ua->body) : $ua->body;
 }
 
 sub conf {
@@ -678,10 +684,10 @@ App::perlbrew - Manage perl installations in your $HOME
     # Install some Perls
     perlbrew install perl-5.12.2
     perlbrew install perl-5.8.1
-    perlbrew install perl-5.13.5
+    perlbrew install perl-5.13.6
 
     # See what were installed
-    perlbrew installed
+    perlbrew list
 
     # Switch perl in the $PATH
     perlbrew switch perl-5.12.2
@@ -711,6 +717,10 @@ installed inside your HOME too. It's a completely separate perl
 environment.
 
 =head1 INSTALLATION
+
+To use C<perlbrew>, it is required to install C<curl> or C<wget>
+first. C<perlbrew> depends on one of this two external commmands to be
+there in order to fetch files from the internet.
 
 The recommended way to install perlbrew is to run these statements in
 your shell:
@@ -771,27 +781,6 @@ Please read the program usage by running
 
     perlbrew -h
 
-Alternatively, this should also do:
-
-    perldoc perlbrew
-
-If you messed up too much or get confused by having to many perls
-installed, you can do:
-
-    perlbrew switch /usr/bin/perl
-
-It will make sure that your current perl in the PATH is pointing
-to C</usr/bin/perl>.
-
-As a matter of fact the C<switch> command checks whether the given
-argument is an executable or not, and create a symlink named 'perl' to
-it if it is. If you really want to you are able to do:
-
-    perlbrew switch /usr/bin/perl6
-
-But maybe not. After running this you might not be able to run
-perlbrew anymore. So be careful not making mistakes there.
-
 =head1 PROJECT DEVELOPMENT
 
 perlbrew project uses PivotalTracker for task tracking:
@@ -810,16 +799,6 @@ Copyright (c) 2010, Kang-min Liu C<< <gugod@gugod.org> >>.
 
 The standalone executable contains the following modules embedded.
 
-=over 4
-
-=item L<HTTP::Lite>
-
-Copyright (c) 2000-2002 Roy Hopper, 2009 Adam Kennedy.
-
-Licensed under the same term as Perl itself.
-
-=back
-
 =head1 LICENCE
 
 The MIT License
@@ -830,7 +809,8 @@ Patches and code improvements has been contributed by:
 
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
-castaway, jrockway, chromatic, Goro Fuji, Sawyer X, and Danijel Tasov.
+castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
+polettix, and tokuhirom.
 
 =head1 DISCLAIMER OF WARRANTY
 

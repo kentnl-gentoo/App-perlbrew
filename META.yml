@@ -21,9 +21,8 @@ no_index:
     - t
 requires:
   File::Path::Tiny: 0.1
-  HTTP::Lite: 2.2
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.12
+version: 0.13
