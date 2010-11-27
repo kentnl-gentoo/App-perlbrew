@@ -13,34 +13,27 @@ perlbrew - Perl Environment manager.
 
 =head1 SYNOPSIS
 
-    perlbrew [options] [init|install|list|switch]
+    perlbrew <command> [options] [arguments]
 
-    # Initialize
-    perlbrew init
+    Commonly used commands:
+        init           Initialize perlbrew environment.
+        install        Install perl
+        switch         List installed perls
+        use            Use the specified perl in current shell
+        switch         Permanently use the specified perl as default
+        mirror         Pick a preffered mirror site
+        off            Permanently turn off perlbrew
+        version        Display version
+        help           Read more detail instructions
 
-    # Pick a prefered CPAN mirror
-    perlbrew mirror
+    Examples:
+        perlbrew install perl-5.12.2
+        perlbrew install perl-5.13.6
 
-    # Install some Perls
-    perlbrew install perl-5.12.2
-    perlbrew install perl-5.13.6
+        perlbrew list
 
-    # Install from a git checkout
-    cd /path/to/src/perl
-    perlbrew install .
-
-    # List which perls are installed
-    perlbrew list
-
-    # Switch perl in the $PATH
-    perlbrew switch perl-5.13.6
-    perl -v
-
-    # Turn it off. Disable it.
-    perlbrew off
-
-    # Turn it back on. Re-enable it.
-    perlbrew switch perl-5.13.6
+        perlbrew use perl-5.13.6
+        perlbrew switch perl-5.12.2
 
 =head1 COMMANDS
 
@@ -97,7 +90,7 @@ variables that are set by C<perlbrew> itself for bash integration.
 The output is something similar to this:
 
     export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
-    export PERLBREW_VERSION=0.11
+    export PERLBREW_VERSION=0.13
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin
 
 =item B<symlink_executables> <perl-version>
@@ -119,6 +112,10 @@ This essentially creates this symlink:
    -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.6
 
 You should not need to do this if you are using perlbrew 0.11 or newer, to intsall
+
+=item B<install-cpanm>
+
+Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 =back
 
@@ -160,14 +157,21 @@ pass through switches to the perl Configure script.
 
 =back
 
-=head1 DESCRIPTION
-
-Read L<App::perlbrew> for more complete documentation.
-
 =head1 CONFIGURATION
 
-By default perlbrew builds and installs copies of perl into
-C<$ENV{HOME}/perl5/perlbrew>. To use a different directory, set the
-C<PERLBREW_ROOT> shell variable before running perlbrew.
+=over 4
+
+=item PERLBREW_ROOT
+
+By default, perlbrew builds and installs perls into
+C<$ENV{HOME}/perl5/perlbrew> directory. To use a different directory,
+set this environment variable in your C<bashrc> to the directory
+before running perlbrew.
+
+=back
+
+=head1 SEE ALSO
+
+L<App::perlbrew>, L<App::cpanminus>
 
 =cut

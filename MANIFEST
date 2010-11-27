@@ -19,3 +19,4 @@ META.yml
 README
 t/00.load.t
 t/01.options.t
+t/02.format_perl_version.t
