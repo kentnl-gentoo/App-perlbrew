@@ -21,3 +21,7 @@ t/00.load.t
 t/01.options.t
 t/02.format_perl_version.t
 t/03.path_with_tilde.t
+t/03.test_get_available_versions.t
+t/04.find_available_perls.t
+t/04.test_uniq.t
+t/05.get_current_perl.t
