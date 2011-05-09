@@ -22,9 +22,10 @@ no_index:
     - inc
     - t
 requires:
+  Cwd: 3.26
   Devel::PatchPerl: 0.26
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.19
+version: 0.20
