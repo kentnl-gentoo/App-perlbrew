@@ -26,3 +26,7 @@ t/04.find_available_perls.t
 t/04.test_uniq.t
 t/05.get_current_perl.t
 t/06.installed_perls.t
+t/07.argv.t
+t/installation.t
+t/mock_perlbrew_root/perls/perl-5.14.0/bin/perl
+t/mock_perlbrew_root/perls/the-dude/bin/perl
