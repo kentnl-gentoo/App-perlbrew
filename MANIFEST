@@ -27,6 +27,10 @@ t/04.test_uniq.t
 t/05.get_current_perl.t
 t/06.installed_perls.t
 t/07.argv.t
+t/08.error_available.t
+t/08.error_install.t
+t/08.error_install_blead.t
+t/08.error_install_cpanm.t
+t/08.error_mirror.t
 t/installation.t
-t/mock_perlbrew_root/perls/perl-5.14.0/bin/perl
-t/mock_perlbrew_root/perls/the-dude/bin/perl
+t/installation2.t
