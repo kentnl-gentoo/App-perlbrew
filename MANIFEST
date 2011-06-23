@@ -32,5 +32,6 @@ t/08.error_install.t
 t/08.error_install_blead.t
 t/08.error_install_cpanm.t
 t/08.error_mirror.t
+t/09.exit_status.t
 t/installation.t
 t/installation2.t
