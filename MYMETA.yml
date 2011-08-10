@@ -13,25 +13,22 @@ build_requires:
   Test::Simple: 0
   Test::Spec: 0
 configure_requires:
-  ExtUtils::MakeMaker: 6.42
+  ExtUtils::MakeMaker: 0
 distribution_type: module
-generated_by: 'Module::Install version 1.01'
+dynamic_config: 0
+generated_by: 'ExtUtils::MakeMaker version 6.57_05'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
-module_name: App::perlbrew
 name: App-perlbrew
 no_index:
   directory:
-    - inc
     - t
+    - inc
 requires:
   Cwd: 3.26
   Devel::PatchPerl: 0.26
   File::Path::Tiny: 0
-  perl: 5.8.0
-resources:
-  license: http://opensource.org/licenses/mit-license.php
-  repository: git://github.com/gugod/App-perlbrew.git
+  perl: 5.008
 version: 0.28
