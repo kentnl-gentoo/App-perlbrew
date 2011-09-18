@@ -10,7 +10,7 @@ build_requires:
   Test::Exception: 0
   Test::More: 0
   Test::Output: 0
-  Test::Simple: 0
+  Test::Simple: 0.98
   Test::Spec: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.42
@@ -28,10 +28,10 @@ no_index:
     - t
 requires:
   Cwd: 3.26
-  Devel::PatchPerl: 0.26
+  Devel::PatchPerl: 0.46
   File::Path::Tiny: 0
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.28
+version: 0.29
