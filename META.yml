@@ -29,10 +29,9 @@ no_index:
 requires:
   Devel::PatchPerl: 0.46
   File::Path::Tiny: 0.1
-  Text::Levenshtein: 0.04
   local::lib: 1.0
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.30
+version: 0.31

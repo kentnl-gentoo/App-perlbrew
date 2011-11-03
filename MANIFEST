@@ -35,10 +35,13 @@ t/08.error_install_cpanm.t
 t/08.error_mirror.t
 t/09.exit_status.t
 t/10.resolve.t
+t/11.editdist.t
+t/11.root_from_arg.t
 t/command-available.t
 t/command-display-rc.t
 t/command-env.t
 t/command-exec.t
+t/command-help.t
 t/command-install-cpanm.t
 t/command-install-patchperl.t
 t/command-lib.t
