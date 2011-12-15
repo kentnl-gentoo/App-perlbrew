@@ -38,6 +38,7 @@ t/10.resolve.t
 t/11.editdist.t
 t/11.root_from_arg.t
 t/command-available.t
+t/command-compgen.t
 t/command-display-rc.t
 t/command-env.t
 t/command-exec.t
@@ -46,6 +47,7 @@ t/command-install-cpanm.t
 t/command-install-patchperl.t
 t/command-lib.t
 t/command-list.t
+t/installation-perlbrew.t
 t/installation.t
 t/installation2.t
 t/test_helpers.pl
