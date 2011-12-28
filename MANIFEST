@@ -37,6 +37,7 @@ t/09.exit_status.t
 t/10.resolve.t
 t/11.editdist.t
 t/11.root_from_arg.t
+t/12.sitecustomize.t
 t/command-available.t
 t/command-compgen.t
 t/command-display-rc.t
@@ -50,4 +51,6 @@ t/command-list.t
 t/installation-perlbrew.t
 t/installation.t
 t/installation2.t
+t/mock_perlbrew_root/perls/perl-5.14.2/bin/perl
+t/mock_perlbrew_root/perls/perl-5.14.2/lib/site_perl/5.14.2/sitecustomize.pl
 t/test_helpers.pl
