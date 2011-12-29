@@ -27,6 +27,7 @@ no_index:
     - inc
     - t
 requires:
+  Capture::Tiny: 0.13
   Devel::PatchPerl: 0.46
   File::Path::Tiny: 0.1
   local::lib: 1.008
@@ -34,4 +35,4 @@ requires:
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.37
+version: 0.38
