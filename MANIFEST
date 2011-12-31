@@ -51,6 +51,4 @@ t/command-list.t
 t/installation-perlbrew.t
 t/installation.t
 t/installation2.t
-t/mock_perlbrew_root/perls/perl-5.14.2/bin/perl
-t/mock_perlbrew_root/perls/perl-5.14.2/lib/site_perl/5.14.2/sitecustomize.pl
 t/test_helpers.pl
