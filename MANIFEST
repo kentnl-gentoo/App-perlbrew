@@ -49,6 +49,7 @@ t/command-install-cpanm.t
 t/command-install-patchperl.t
 t/command-lib.t
 t/command-list.t
+t/current_perl.t
 t/installation-perlbrew.t
 t/installation.t
 t/installation2.t
