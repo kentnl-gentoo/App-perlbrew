@@ -3,7 +3,7 @@ abstract: 'Manage perl installations in your $HOME'
 author:
   - 'Kang-min Liu  C<< <gugod@gugod.org> >>'
 build_requires:
-  ExtUtils::MakeMaker: 6.42
+  ExtUtils::MakeMaker: 6.62
   File::Temp: 0
   IO::All: 0
   Path::Class: 0
@@ -13,9 +13,10 @@ build_requires:
   Test::Simple: 0.98
   Test::Spec: 0
 configure_requires:
-  ExtUtils::MakeMaker: 6.42
+  ExtUtils::MakeMaker: 6.62
 distribution_type: module
-generated_by: 'Module::Install version 1.01'
+dynamic_config: 1
+generated_by: 'Module::Install version 1.04'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -36,4 +37,4 @@ requires:
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.41
+version: 0.42
