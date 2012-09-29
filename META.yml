@@ -28,13 +28,13 @@ no_index:
     - inc
     - t
 requires:
-  CPAN::Perl::Releases: 0.68
-  Capture::Tiny: 0.19
+  CPAN::Perl::Releases: 0.70
+  Capture::Tiny: 0.20
   Devel::PatchPerl: 0.76
-  File::Path::Tiny: 0.3
+  File::Path::Tiny: 0.5
   local::lib: 1.008004
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.50
+version: 0.51
