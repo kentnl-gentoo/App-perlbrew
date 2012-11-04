@@ -32,8 +32,8 @@ requires:
   Capture::Tiny: 0.20
   Devel::PatchPerl: 0.76
   local::lib: 1.008004
-  perl: 5.8.8
+  perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.54
+version: 0.55
