@@ -9,6 +9,7 @@ build_requires:
   Path::Class: 0
   Test::Exception: 0
   Test::More: 0
+  Test::NoWarnings: 0
   Test::Output: 0
   Test::Simple: 0.98
   Test::Spec: 0
@@ -36,4 +37,4 @@ requires:
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.58
+version: 0.59

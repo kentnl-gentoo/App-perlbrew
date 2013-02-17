@@ -55,4 +55,5 @@ t/do_system.t
 t/installation-perlbrew.t
 t/installation.t
 t/installation2.t
+t/installation3.t
 t/test_helpers.pl
