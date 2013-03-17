@@ -5,7 +5,7 @@ author:
 build_requires:
   ExtUtils::MakeMaker: 6.59
   File::Temp: 0
-  IO::All: 0
+  IO::All: 0.46
   Path::Class: 0
   Test::Exception: 0
   Test::More: 0
@@ -29,12 +29,12 @@ no_index:
     - inc
     - t
 requires:
-  CPAN::Perl::Releases: 0.76
-  Capture::Tiny: 0.20
-  Devel::PatchPerl: 0.76
-  local::lib: 1.008004
+  CPAN::Perl::Releases: 1.06
+  Capture::Tiny: 0.21
+  Devel::PatchPerl: 0.84
+  local::lib: 1.008009
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.59
+version: 0.60
