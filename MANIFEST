@@ -24,7 +24,6 @@ t/02.format_perl_version.t
 t/03.path_with_tilde.t
 t/03.test_get_available_versions.t
 t/04.find_available_perls.t
-t/04.test_uniq.t
 t/05.get_current_perl.t
 t/06.installed_perls.t
 t/07.argv.t
@@ -40,6 +39,7 @@ t/11.root_from_arg.t
 t/12.sitecustomize.t
 t/13.perl_release.t
 t/14.perl_version_parsing.t
+t/command-alias.t
 t/command-available.t
 t/command-compgen.t
 t/command-display-rc.t
