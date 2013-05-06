@@ -57,3 +57,4 @@ t/installation.t
 t/installation2.t
 t/installation3.t
 t/test_helpers.pl
+t/unit-files-are-the-same.t
