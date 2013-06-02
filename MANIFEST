@@ -39,6 +39,7 @@ t/11.root_from_arg.t
 t/12.sitecustomize.t
 t/13.perl_release.t
 t/14.perl_version_parsing.t
+t/15.no-reuse-build-dir.t
 t/command-alias.t
 t/command-available.t
 t/command-compgen.t
@@ -52,9 +53,12 @@ t/command-lib.t
 t/command-list.t
 t/current_perl.t
 t/do_system.t
+t/failure-command-install-cpanm.t
+t/failure-command-install-patchperl.t
 t/installation-perlbrew.t
 t/installation.t
 t/installation2.t
 t/installation3.t
+t/test.tar.gz
 t/test_helpers.pl
 t/unit-files-are-the-same.t
