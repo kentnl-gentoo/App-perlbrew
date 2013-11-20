@@ -32,9 +32,9 @@ requires:
   CPAN::Perl::Releases: 1.26
   Capture::Tiny: 0.22
   Devel::PatchPerl: 1.00
-  local::lib: 1.008009
+  local::lib: 1.008026
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.66
+version: 0.67
