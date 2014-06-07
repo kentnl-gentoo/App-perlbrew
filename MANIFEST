@@ -56,6 +56,7 @@ t/current_perl.t
 t/do_system.t
 t/failure-command-install-cpanm.t
 t/failure-command-install-patchperl.t
+t/http-program-control.t
 t/http.t
 t/installation-perlbrew.t
 t/installation.t

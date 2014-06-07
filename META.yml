@@ -4,15 +4,15 @@ author:
   - 'Kang-min Liu  C<< <gugod@gugod.org> >>'
 build_requires:
   ExtUtils::MakeMaker: 6.59
-  File::Temp: 0
-  IO::All: 0.46
-  Path::Class: 0
-  Test::Exception: 0
-  Test::More: 0
-  Test::NoWarnings: 0
-  Test::Output: 0.04
-  Test::Simple: 0.98
-  Test::Spec: 0.46
+  File::Temp: 0.2304
+  IO::All: 0.51
+  Path::Class: 0.33
+  Test::Exception: 0.32
+  Test::More: 1.001002
+  Test::NoWarnings: 1.04
+  Test::Output: 1.03
+  Test::Simple: 1.001002
+  Test::Spec: 0.47
 configure_requires:
   ExtUtils::MakeMaker: 6.59
 distribution_type: module
@@ -29,12 +29,14 @@ no_index:
     - inc
     - t
 requires:
-  CPAN::Perl::Releases: 1.26
-  Capture::Tiny: 0.22
-  Devel::PatchPerl: 1.00
-  local::lib: 1.008026
+  CPAN::Perl::Releases: 1.58
+  Capture::Tiny: 0.23
+  Devel::PatchPerl: 1.14
+  Pod::Parser: 1.61
+  Pod::Usage: 1.63
+  local::lib: 2.000004
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/gugod/App-perlbrew.git
-version: 0.67
+version: 0.68
