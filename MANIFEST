@@ -37,6 +37,7 @@ t/09.exit_status.t
 t/10.resolve.t
 t/11.editdist.t
 t/11.root_from_arg.t
+t/12.destdir.t
 t/12.sitecustomize.t
 t/13.perl_release.t
 t/14.perl_version_parsing.t
