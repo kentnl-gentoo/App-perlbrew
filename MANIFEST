@@ -42,6 +42,11 @@ t/12.sitecustomize.t
 t/13.perl_release.t
 t/14.perl_version_parsing.t
 t/15.no-reuse-build-dir.t
+t/16.release-detail.t
+t/17.release-detail-cperl-local.t
+t/17.release-detail-cperl-remote.t
+t/18.release-detail-perl-local.t
+t/18.release-detail-perl-remote.t
 t/command-alias.t
 t/command-available.t
 t/command-compgen.t
