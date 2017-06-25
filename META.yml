@@ -5,6 +5,7 @@ author:
 build_requires:
   ExtUtils::MakeMaker: 6.59
   File::Temp: '0.2304'
+  File::Which: '1.21'
   IO::All: '0.51'
   Path::Class: '0.33'
   Test::Exception: '0.32'
